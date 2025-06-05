@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz List</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: white;
+      font-family: 'Segoe UI', sans-serif;
+      color: #92400e;
+      text-align: center;
+      padding: 2rem;
+    }
+    .logo {
+      max-width: 180px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin: 1.5rem 0;
+    }
+    .quiz-btn {
+      background-color: #facc15;
+      color: #92400e;
+      padding: 1rem;
+      margin: 1rem auto;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      width: 90%;
+      max-width: 400px;
+      display: block;
+      transition: 0.3s;
+    }
+    .quiz-btn:hover {
+      background-color: #eab308;
+    }
+    .expired {
+      background-color: #fecaca;
+      color: #991b1b;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <img class="logo" src="https://i.postimg.cc/fyq44zjf/MASS-LOGO.jpg" alt="Logo" />
+  <h1>Quiz List</h1>
+  <div id="quizContainer">Loading...</div>
+
+  <script>
+    const binId = "6841826a8a456b7966a9c7e8";
+    const apiKey = "$2a$10$cYggGwNg48fjaL1NmWrBd.IUZg5wdk25N06pXBk2Iwof.bR2MDjca";
+
+    async function loadQuizzes() {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        headers: { "X-Master-Key": apiKey }
+      });
+      const data = await res.json();
+      const quizzes = data.record.quizzes || [];
+      const now = new Date();
+
+      const container = document.getElementById("quizContainer");
+      container.innerHTML = "";
+
+      quizzes.forEach((quiz) => {
+        const start = new Date(quiz.startTime);
+        const end = new Date(quiz.endTime);
+        const isExpired = now > end;
+
+        const btn = document.createElement("button");
+        btn.textContent = `${quiz.name} (${start.toLocaleString()} - ${end.toLocaleString()})`;
+        btn.className = `quiz-btn ${isExpired ? 'expired' : ''}`;
+
+        if (isExpired) {
+          btn.onclick = () => alert("Time Expired for this quiz.");
+        } else {
+          btn.onclick = () => {
+            window.location.href = `quiz.html?quizId=${quiz.id}`;
+          };
+        }
+
+        container.appendChild(btn);
+      });
+    }
+
+    loadQuizzes();
+  </script>
+</body>
+</html>
