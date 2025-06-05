@@ -1,0 +1,37 @@
+<!-- =================== dashboard.html =================== -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - MASS Academy</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #ffffff; color: #333; }
+    .btn {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      padding: 1rem;
+      background-color: #facc15;
+      color: #000;
+      text-align: center;
+      border-radius: 0.5rem;
+      font-weight: bold;
+      font-size: 1.125rem;
+      transition: background-color 0.3s;
+    }
+    .btn:hover {
+      background-color: #eab308;
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen px-4">
+  <img src="https://i.postimg.cc/fyq44zjf/MASS-LOGO.jpg" alt="MASS Logo" class="w-40 mb-8">
+
+  <div class="flex flex-col items-center gap-6 w-full">
+    <a href="addquiz.html" class="btn">Add New Quiz</a>
+    <a href="quizlist.html" class="btn">Quiz List</a>
+  </div>
+</body>
+</html>
