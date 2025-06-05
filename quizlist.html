@@ -3,86 +3,107 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Quiz List</title>
+  <title>Available Quizzes - MASS ACADEMY</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <style>
     body {
-      background-color: white;
-      font-family: 'Segoe UI', sans-serif;
-      color: #92400e;
-      text-align: center;
-      padding: 2rem;
+      background-color: #ffffff; /* white background */
+      color: #000000; /* black font */
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
     }
-    .logo {
+    #logo {
+      display: block;
+      margin: 20px auto;
       max-width: 180px;
-      margin: auto;
     }
     h1 {
-      font-size: 1.8rem;
-      font-weight: bold;
-      margin: 1.5rem 0;
+      text-align: center;
+      font-weight: 700;
+      margin-bottom: 25px;
+      font-size: 2rem;
     }
-    .quiz-btn {
-      background-color: #facc15;
-      color: #92400e;
-      padding: 1rem;
-      margin: 1rem auto;
-      border-radius: 0.5rem;
-      font-weight: bold;
-      width: 90%;
-      max-width: 400px;
-      display: block;
-      transition: 0.3s;
+    .quiz-item {
+      background: #e7f5e1; /* very light lime green */
+      border: 1.5px solid #a2d5a1;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #000000;
+      transition: background-color 0.3s ease;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      user-select: none;
     }
-    .quiz-btn:hover {
-      background-color: #eab308;
+    .quiz-item:hover {
+      background-color: #b7e4a8; /* lime green hover */
     }
     .expired {
-      background-color: #fecaca;
-      color: #991b1b;
-      cursor: not-allowed;
+      color: #d9534f; /* red for expired */
+      font-weight: 700;
+      float: right;
     }
   </style>
 </head>
 <body>
-  <img class="logo" src="https://i.postimg.cc/fyq44zjf/MASS-LOGO.jpg" alt="Logo" />
-  <h1>Quiz List</h1>
-  <div id="quizContainer">Loading...</div>
+  <img id="logo" src="https://i.postimg.cc/fyq44zjf/MASS-LOGO.jpg" alt="MASS ACADEMY Logo" />
+
+  <h1>Available Quizzes</h1>
+  <div id="quizList">Loading quizzes...</div>
 
   <script>
     const binId = "6841826a8a456b7966a9c7e8";
     const apiKey = "$2a$10$cYggGwNg48fjaL1NmWrBd.IUZg5wdk25N06pXBk2Iwof.bR2MDjca";
 
     async function loadQuizzes() {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-        headers: { "X-Master-Key": apiKey }
-      });
-      const data = await res.json();
-      const quizzes = data.record.quizzes || [];
-      const now = new Date();
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+          headers: { 'X-Master-Key': apiKey }
+        });
+        const data = await res.json();
+        const quizzes = data.record.quizzes || [];
 
-      const container = document.getElementById("quizContainer");
-      container.innerHTML = "";
+        const container = document.getElementById("quizList");
+        container.innerHTML = "";
 
-      quizzes.forEach((quiz) => {
-        const start = new Date(quiz.startTime);
-        const end = new Date(quiz.endTime);
-        const isExpired = now > end;
-
-        const btn = document.createElement("button");
-        btn.textContent = `${quiz.name} (${start.toLocaleString()} - ${end.toLocaleString()})`;
-        btn.className = `quiz-btn ${isExpired ? 'expired' : ''}`;
-
-        if (isExpired) {
-          btn.onclick = () => alert("Time Expired for this quiz.");
-        } else {
-          btn.onclick = () => {
-            window.location.href = `quiz.html?quizId=${quiz.id}`;
-          };
+        if (quizzes.length === 0) {
+          container.innerHTML = "<p>No quizzes available.</p>";
+          return;
         }
 
-        container.appendChild(btn);
-      });
+        quizzes.forEach(q => {
+          const now = new Date();
+          const start = new Date(q.startTime);
+          const end = new Date(q.endTime);
+
+          const item = document.createElement("div");
+          item.className = "quiz-item";
+
+          if (now < start) {
+            item.textContent = `${q.name} (Quiz not started)`;
+            item.style.color = "#6c757d"; // gray
+            item.style.cursor = "default";
+          } else if (now > end) {
+            item.textContent = `${q.name} `;
+            const expiredTag = document.createElement("span");
+            expiredTag.textContent = "Time Expired";
+            expiredTag.className = "expired";
+            item.appendChild(expiredTag);
+          } else {
+            item.textContent = q.name;
+            item.onclick = () => {
+              window.location.href = `quiz.html?id=${q.id}`;
+            };
+          }
+
+          container.appendChild(item);
+        });
+      } catch (error) {
+        document.getElementById("quizList").innerHTML = "<p>Failed to load quizzes.</p>";
+      }
     }
 
     loadQuizzes();
