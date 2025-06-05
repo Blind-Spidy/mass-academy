@@ -3,41 +3,44 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MASS ACADEMY Dashboard</title>
+  <title>MASS ACADEMY - Quiz Portal</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <style>
     body {
-      background: white;
-      font-family: 'Segoe UI', sans-serif;
-      color: #92400e;
-      text-align: center;
-      padding-top: 2rem;
+      background-color: #ffffff; /* white background */
+      color: #000000; /* black font */
+      font-family: 'Arial', sans-serif;
     }
-    .logo {
-      max-width: 200px;
-      margin: auto;
-    }
-    .btn {
-      background-color: #facc15;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      font-weight: bold;
-      margin-top: 2.5rem;
-      color: #92400e;
-      transition: background-color 0.3s;
+    #logo {
       display: block;
-      width: 90%;
-      max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
+      margin: 30px auto;
+      max-width: 180px;
     }
-    .btn:hover {
-      background-color: #eab308;
+    .quiz-button {
+      display: block;
+      background: #d4edda; /* light lime green */
+      border: 2px solid #a2d5a1;
+      color: #000000;
+      font-weight: 700;
+      font-size: 1.2rem;
+      width: 100%;
+      max-width: 320px;
+      padding: 15px 0;
+      border-radius: 8px;
+      margin: 40px auto;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      text-align: center;
+      text-decoration: none;
+    }
+    .quiz-button:hover {
+      background-color: #b7e4a8; /* darker lime green */
     }
   </style>
 </head>
 <body>
-  <img class="logo" src="https://i.postimg.cc/fyq44zjf/MASS-LOGO.jpg" alt="Logo" />
-  <a href="quizlist.html" class="btn">Quiz</a>
+  <img id="logo" src="https://i.postimg.cc/fyq44zjf/MASS-LOGO.jpg" alt="MASS ACADEMY Logo" />
+  
+  <a href="quizlist.html" class="quiz-button">Quiz</a>
 </body>
 </html>
