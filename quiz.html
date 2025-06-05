@@ -3,229 +3,179 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Take Quiz</title>
+  <title>Take Quiz - MASS ACADEMY</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
   <style>
     body {
-      background-color: #fffbea;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #92400e;
-      padding: 1.5rem;
-      max-width: 600px;
+      background-color: #ffffff; /* white background */
+      color: #000000; /* black font */
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
+      max-width: 700px;
       margin: auto;
     }
+    #logo {
+      display: block;
+      margin: 20px auto 40px auto;
+      max-width: 180px;
+    }
     h1 {
-      font-weight: 700;
-      font-size: 1.7rem;
-      margin-bottom: 1rem;
       text-align: center;
-      letter-spacing: 1.5px;
+      font-weight: 700;
+      margin-bottom: 30px;
+      font-size: 2rem;
     }
-    form {
-      margin-top: 1.5rem;
-    }
-    .question {
-      margin-bottom: 1.5rem;
-      background: #fffde7;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      border: 1px solid #facc15;
-    }
-    .question h2 {
-      font-weight: 600;
-      margin-bottom: 0.75rem;
+    .question-box {
+      background: #e7f5e1; /* very light lime green */
+      border: 1.5px solid #a2d5a1;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      color: #000000;
     }
     label {
+      font-weight: 600;
       display: block;
-      margin-bottom: 0.3rem;
-      cursor: pointer;
+      margin-bottom: 8px;
     }
     input[type="text"], textarea {
       width: 100%;
-      padding: 0.4rem 0.6rem;
-      margin-top: 0.3rem;
-      border-radius: 0.3rem;
-      border: 1px solid #ddd;
+      padding: 8px;
+      border: 1.5px solid #a2d5a1;
+      border-radius: 6px;
+      margin-bottom: 12px;
       font-size: 1rem;
-      font-family: inherit;
-      color: #92400e;
+      color: #000000;
+      background-color: #f7fff7;
     }
-    .btn-submit {
-      background-color: #facc15;
-      color: #92400e;
+    input[type="radio"], input[type="checkbox"] {
+      accent-color: #8fbc8f; /* nice green */
+      margin-right: 8px;
+    }
+    button {
+      background-color: #d4edda; /* light lime green */
+      border: 2px solid #a2d5a1;
+      color: #000000;
       font-weight: 700;
-      border: none;
-      padding: 1rem 3rem;
-      border-radius: 0.5rem;
+      padding: 12px 30px;
+      border-radius: 8px;
+      font-size: 1.1rem;
       cursor: pointer;
+      transition: background-color 0.3s ease;
       display: block;
-      margin: 1.5rem auto 0 auto;
+      margin: 20px auto 40px auto;
+      max-width: 250px;
       width: 100%;
-      max-width: 320px;
-      transition: background-color 0.3s;
     }
-    .btn-submit:hover {
-      background-color: #eab308;
+    button:hover {
+      background-color: #b7e4a8; /* darker lime green */
     }
-    .error {
-      color: #b45309;
-      margin-top: 0.4rem;
-      font-size: 0.9rem;
-    }
-    .result {
-      text-align: center;
+    .expired-message {
+      color: #d9534f; /* red */
       font-weight: 700;
-      font-size: 1.2rem;
-      margin-top: 1rem;
-      color: #065f46;
+      text-align: center;
+      font-size: 1.3rem;
+      margin-top: 40px;
     }
   </style>
 </head>
 <body>
+  <img id="logo" src="https://i.postimg.cc/fyq44zjf/MASS-LOGO.jpg" alt="MASS ACADEMY Logo" />
 
-  <h1 id="quizTitle">Loading quiz...</h1>
+  <h1 id="quizName">Loading Quiz...</h1>
 
-  <form id="quizForm"></form>
+  <div id="quizContainer"></div>
 
-  <div id="result" class="result"></div>
+  <button id="submitBtn" onclick="submitQuiz()" style="display:none;">Submit</button>
+
+  <div id="expiredMsg" class="expired-message" style="display:none;">Time Expired. You cannot participate.</div>
 
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizId = urlParams.get('id');
+
     const binId = "6841826a8a456b7966a9c7e8";
     const apiKey = "$2a$10$cYggGwNg48fjaL1NmWrBd.IUZg5wdk25N06pXBk2Iwof.bR2MDjca";
 
-    // Parse quizId from URL
-    function getQuizId() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("quizId");
+    let quizData;
+
+    async function loadQuiz() {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+          headers: { 'X-Master-Key': apiKey }
+        });
+        const data = await res.json();
+        const quizzes = data.record.quizzes || [];
+        quizData = quizzes.find(q => q.id === quizId);
+
+        if (!quizData) {
+          document.getElementById('quizName').textContent = 'Quiz not found.';
+          return;
+        }
+
+        const now = new Date();
+        const start = new Date(quizData.startTime);
+        const end = new Date(quizData.endTime);
+
+        if (now < start || now > end) {
+          document.getElementById('expiredMsg').style.display = 'block';
+          return;
+        }
+
+        document.getElementById('quizName').textContent = quizData.name;
+        renderQuestions();
+        document.getElementById('submitBtn').style.display = 'block';
+
+      } catch (error) {
+        document.getElementById('quizName').textContent = 'Failed to load quiz.';
+      }
     }
 
-    // Load quiz from JSONBin
-    async function loadQuiz() {
-      const quizId = getQuizId();
-      if (!quizId) {
-        alert("Quiz ID not specified.");
-        return;
-      }
+    function renderQuestions() {
+      const container = document.getElementById('quizContainer');
+      container.innerHTML = '';
 
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-        headers: { "X-Master-Key": apiKey }
-      });
-      const data = await res.json();
-      const quizzes = data.record.quizzes || [];
-      const quiz = quizzes.find(q => q.id === quizId);
+      quizData.questions.forEach((q, idx) => {
+        const questionDiv = document.createElement('div');
+        questionDiv.className = 'question-box';
 
-      if (!quiz) {
-        alert("Quiz not found.");
-        return;
-      }
+        const qLabel = document.createElement('label');
+        qLabel.textContent = `Q${idx + 1}. ${q.text}`;
+        questionDiv.appendChild(qLabel);
 
-      const now = new Date();
-      const start = new Date(quiz.startTime);
-      const end = new Date(quiz.endTime);
-
-      if (now < start || now > end) {
-        alert(`This quiz is available only from ${start.toLocaleString()} to ${end.toLocaleString()}`);
-        window.location.href = "index.html";
-        return;
-      }
-
-      document.getElementById("quizTitle").textContent = quiz.name;
-
-      const form = document.getElementById("quizForm");
-
-      quiz.questions.forEach((q, i) => {
-        const div = document.createElement("div");
-        div.className = "question";
-        div.innerHTML = `<h2>Q${i + 1}. ${q.text}</h2>`;
-
-        if (q.type === "mcq" || q.type === "checkbox") {
-          q.options.forEach((opt, idx) => {
-            const inputType = q.type === "mcq" ? "radio" : "checkbox";
-            const nameAttr = `q${i}`;
-            const inputId = `q${i}_opt${idx}`;
-            const input = document.createElement("input");
-            input.type = inputType;
-            input.name = nameAttr;
-            input.id = inputId;
-            input.value = idx;
-
-            const label = document.createElement("label");
-            label.htmlFor = inputId;
-            label.textContent = opt;
-
-            div.appendChild(input);
-            div.appendChild(label);
-          });
-        } else if (q.type === "short") {
-          const input = document.createElement("input");
-          input.type = "text";
-          input.name = `q${i}`;
-          input.required = true;
-          div.appendChild(input);
-        }
-
-        form.appendChild(div);
-      });
-
-      const submitBtn = document.createElement("button");
-      submitBtn.type = "submit";
-      submitBtn.className = "btn-submit";
-      submitBtn.textContent = "Submit Answers";
-      form.appendChild(submitBtn);
-
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        let score = 0;
-        let total = quiz.questions.length;
-
-        quiz.questions.forEach((q, i) => {
-          const userAns = [];
-
-          if (q.type === "mcq") {
-            const selected = form.querySelector(`input[name="q${i}"]:checked`);
-            if (selected) userAns.push(Number(selected.value));
-          } else if (q.type === "checkbox") {
-            const selecteds = form.querySelectorAll(`input[name="q${i}"]:checked`);
-            selecteds.forEach(inp => userAns.push(Number(inp.value)));
-            // Check selectLimit if set
-            if (q.selectLimit && userAns.length > q.selectLimit) {
-              alert(`Question ${i + 1}: You can select maximum ${q.selectLimit} options.`);
-              return;
-            }
-          } else if (q.type === "short") {
-            const input = form.querySelector(`input[name="q${i}"]`);
-            if (input) userAns.push(input.value.trim());
-          }
-
-          // Check answers for MCQ and checkbox
-          if (q.type === "mcq" || q.type === "checkbox") {
-            if (Array.isArray(q.answer)) {
-              // Compare arrays (order not important)
-              const correct = q.answer.sort().toString();
-              const user = userAns.sort().toString();
-              if (correct === user) score++;
-            } else {
-              if (q.answer === userAns[0]) score++;
-            }
-          } else if (q.type === "short") {
-            if (q.answer && userAns[0]) {
-              // Simple case-insensitive match
-              if (q.answer.toString().toLowerCase() === userAns[0].toLowerCase()) {
-                score++;
-              }
-            }
-          }
-        });
-
-        if (quiz.showScore) {
-          document.getElementById("result").textContent = `Your Score: ${score} / ${total}`;
+        if (q.type === 'short') {
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.name = `q-${idx}`;
+          questionDiv.appendChild(input);
         } else {
-          document.getElementById("result").textContent = "Thank you for participating!";
+          q.options.forEach((opt, optIdx) => {
+            const optionWrapper = document.createElement('div');
+            const input = document.createElement('input');
+            input.type = (q.type === 'checkbox') ? 'checkbox' : 'radio';
+            input.name = `q-${idx}` + (q.type === 'checkbox' ? `-opt-${optIdx}` : '');
+            input.value = optIdx;
+            input.id = `q${idx}opt${optIdx}`;
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.textContent = opt;
+            label.style.marginLeft = '8px';
+
+            optionWrapper.appendChild(input);
+            optionWrapper.appendChild(label);
+
+            questionDiv.appendChild(optionWrapper);
+          });
         }
 
-        form.querySelector("button[type=submit]").disabled = true;
+        container.appendChild(questionDiv);
       });
+    }
+
+    function submitQuiz() {
+      alert('Quiz submitted! Thank you.');
+      // Submission and marking logic can be added here
     }
 
     loadQuiz();
