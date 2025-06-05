@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quiz Result</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; text-align: center; background: #f9f9f9; }
+    .score-box { background: #e7f5e1; border: 1px solid #a2d5a1; display: inline-block; padding: 20px 40px; border-radius: 10px; }
+    h1 { color: #4caf50; }
+  </style>
+</head>
+<body>
+  <div class="score-box">
+    <h1>Quiz Completed!</h1>
+    <p>Your Score:</p>
+    <h2 id="scoreDisplay"></h2>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const score = urlParams.get('score') || 0;
+    const total = urlParams.get('total') || 0;
+
+    document.getElementById('scoreDisplay').textContent = `${score} / ${total}`;
+  </script>
+</body>
+</html>
