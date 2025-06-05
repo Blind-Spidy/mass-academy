@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Edit Quiz - Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: white;
+      color: black;
+    }
+    .input-box {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 0.375rem;
+      margin-bottom: 1rem;
+    }
+    .question-box {
+      background: #fdfde7;
+      border: 1px solid #ccc;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body class="p-6">
+
+  <h1 class="text-2xl font-bold mb-4">Edit Quiz</h1>
+  <form id="editForm">
+    <label>Quiz Name</label>
+    <input type="text" id="quizName" class="input-box" required>
+
+    <label>Start Time</label>
+    <input type="datetime-local" id="startTime" class="input-box" required>
+
+    <label>End Time</label>
+    <input type="datetime-local" id="endTime" class="input-box" required>
+
+    <label>Show Score After Submit?</label>
+    <select id="showScore" class="input-box">
+      <option value="true">Yes</option>
+      <option value="false">No</option>
+    </select>
+
+    <div id="questionsContainer"></div>
+
+    <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Save Changes</button>
+  </form>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const quizId = urlParams.get('id');
+    const binId = "6841826a8a456b7966a9c7e8";
+    const apiKey = "$2a$10$cYggGwNg48fjaL1NmWrBd.IUZg5wdk25N06pXBk2Iwof.bR2MDjca";
+    let quizzes = [];
+
+    async function loadQuiz() {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+        headers: { "X-Master-Key": apiKey }
+      });
+      const data = await res.json();
+      quizzes = data.record.quizzes;
+
+      const quiz = quizzes.find(q => q.id === quizId);
+      if (!quiz) return alert("Quiz not found");
+
+      document.getElementById("quizName").value = quiz.name;
+      document.getElementById("startTime").value = quiz.startTime;
+      document.getElementById("endTime").value = quiz.endTime;
+      document.getElementById("showScore").value = quiz.showScore.toString();
+
+      const container = document.getElementById("questionsContainer");
+      quiz.questions.forEach((q, idx) => {
+        const div = document.createElement("div");
+        div.className = "question-box";
+        div.innerHTML = `
+          <label>Question</label>
+          <textarea class="input-box" name="questionText">${q.text}</textarea>
+
+          <label>Type</label>
+          <select class="input-box" name="questionType" onchange="updateLimitBox(this, ${idx})">
+            <option value="mcq" ${q.type === 'mcq' ? 'selected' : ''}>MCQ</option>
+            <option value="checkbox" ${q.type === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+            <option value="short" ${q.type === 'short' ? 'selected' : ''}>Short Answer</option>
+          </select>
+
+          <div name="optionLimitBox" class="${q.type === 'checkbox' ? '' : 'hidden'}">
+            <label>How many can be selected?</label>
+            <input type="number" name="optionLimit" class="input-box" value="${q.selectLimit || ''}">
+          </div>
+
+          <div id="options-${idx}">
+            ${q.options.map((opt, i) => `
+              <div class="flex items-center gap-2 mb-1">
+                <input type="text" name="optionText" class="input-box" value="${opt}">
+                <input type="${q.type === 'checkbox' ? 'checkbox' : 'radio'}"
+                       name="correct-${idx}" value="${i}" ${q.answer.includes(i) ? 'checked' : ''}>
+                <span class="text-sm">Correct</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateLimitBox(select, idx) {
+      const type = select.value;
+      const limitBox = select.parentElement.querySelector('[name="optionLimitBox"]');
+      if (type === "checkbox") {
+        limitBox.classList.remove("hidden");
+      } else {
+        limitBox.classList.add("hidden");
+      }
+    }
+
+    document.getElementById("editForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const updated = {
+        id: quizId,
+        name: document.getElementById("quizName").value,
+        startTime: document.getElementById("startTime").value,
+        endTime: document.getElementById("endTime").value,
+        showScore: document.getElementById("showScore").value === "true",
+        questions: []
+      };
+
+      const questionBoxes = document.querySelectorAll(".question-box");
+      questionBoxes.forEach((box, idx) => {
+        const text = box.querySelector("[name='questionText']").value;
+        const type = box.querySelector("[name='questionType']").value;
+        const options = Array.from(box.querySelectorAll("input[name='optionText']")).map(o => o.value);
+        const answer = [];
+
+        box.querySelectorAll(`input[name='correct-${idx}']`).forEach((inp) => {
+          if (inp.checked) {
+            answer.push(Number(inp.value));
+          }
+        });
+
+        const question = { text, type, options, answer: type === 'short' ? answer[0] : answer };
+
+        if (type === 'checkbox') {
+          const limit = box.querySelector("[name='optionLimit']").value;
+          question.selectLimit = Number(limit);
+        }
+
+        updated.questions.push(question);
+      });
+
+      const index = quizzes.findIndex(q => q.id === quizId);
+      quizzes[index] = updated;
+
+      await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': apiKey
+        },
+        body: JSON.stringify({ quizzes })
+      });
+
+      alert("✅ Quiz updated successfully!");
+      location.href = "dashboard.html";
+    });
+
+    window.onload = loadQuiz;
+  </script>
+</body>
+</html>
